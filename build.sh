@@ -5,14 +5,32 @@ set -e
 APPDIR="bh-state-machine"
 KEYSTORE_PATH="./keystore.jks"
 KEYSTORE_ABS_PATH=$(realpath $KEYSTORE_PATH)
+KEY_ALIAS="alias_$(openssl rand -hex 8)"
+KEYSTORE_PASSWORD=$(openssl rand -hex 8)
 
-if [[ ! -f "$KEYSTORE_ABS_PATH" ]]; then
-  echo "Keystore file not found at: $KEYSTORE_ABS_PATH"
-  exit 1
-fi
+# Always create a fresh keystore
+function generate_keystore() {
+  echo "Cleaning up any existing keystore..."
+  rm -f "$KEYSTORE_PATH"
 
-KEY_ALIAS=<GENERATE_RANDOMLY>
-KEYSTORE_PASSWORD=<GENERATE_RANDOMLY>
+  echo "Generating new keystore..."
+  KEY_ALIAS="alias_$(generate_random_string)"
+  KEYSTORE_PASSWORD=$(generate_random_string)
+
+  keytool -genkeypair \
+    -v \
+    -keystore "$KEYSTORE_PATH" \
+    -storepass "$KEYSTORE_PASSWORD" \
+    -keypass "$KEYSTORE_PASSWORD" \
+    -keyalg RSA \
+    -keysize 2048 \
+    -validity 10000 \
+    -alias "$KEY_ALIAS" \
+    -dname "CN=BlackHat, OU=Dev, O=BlackHat, L=BlackHat, S=None, C=BH" \
+    >/dev/null 2>&1
+
+  echo "Keystore created at: $KEYSTORE_ABS_PATH"
+}
 
 function help() { 
     echo "
@@ -42,6 +60,8 @@ function setup_build_folder() {
 
 function local_build_app() {
   if [[ -f "$APPDIR/vulnerable-app/gradlew" ]]; then
+    generate_keystore
+
     echo "===================================="
     echo "Building app in: $APPDIR"
 
