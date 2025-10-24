@@ -5,17 +5,13 @@ set -e
 APPDIR="bh-state-machine"
 KEYSTORE_PATH="./keystore.jks"
 KEYSTORE_ABS_PATH=$(realpath $KEYSTORE_PATH)
-KEY_ALIAS="alias_$(openssl rand -hex 8)"
-KEYSTORE_PASSWORD=$(openssl rand -hex 8)
+KEY_ALIAS="alias_$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16; echo)"
+KEYSTORE_PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16; echo)
 
 # Always create a fresh keystore
 function generate_keystore() {
   echo "Cleaning up any existing keystore..."
   rm -f "$KEYSTORE_PATH"
-
-  echo "Generating new keystore..."
-  KEY_ALIAS="alias_$(generate_random_string)"
-  KEYSTORE_PASSWORD=$(generate_random_string)
 
   keytool -genkeypair \
     -v \
