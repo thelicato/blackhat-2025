@@ -2,7 +2,7 @@
 
 set -e
 
-APPDIR="bh-state-machine"
+APPSDIR="bh-state-machine"
 KEYSTORE_PATH="./keystore.jks"
 KEYSTORE_ABS_PATH=$(realpath $KEYSTORE_PATH)
 KEY_ALIAS="alias_$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16; echo)"
@@ -54,14 +54,14 @@ function setup_build_folder() {
   mkdir -p build
 }
 
-function local_build_app() {
-  if [[ -f "$APPDIR/vulnerable-app/gradlew" ]]; then
+function local_build_vuln_app() {
+  if [[ -f "$APPSDIR/vulnerable-app/gradlew" ]]; then
     generate_keystore
 
     echo "===================================="
-    echo "Building app in: $APPDIR"
+    echo "Building app in: $APPSDIR"
 
-    cd "$APPDIR/vulnerable-app"
+    cd "$APPSDIR/vulnerable-app"
 
     # Placeholder build
     echo "Building placeholder version..."
@@ -72,21 +72,20 @@ function local_build_app() {
       -Pandroid.injected.signing.key.password=$KEYSTORE_PASSWORD
     check_last_command
 
-    cp app/build/outputs/apk/release/app-release.apk "../../build/${APPDIR%/}-placeholder.apk"
+    cp app/build/outputs/apk/release/app-release.apk "../../build/bh-demo-placeholder.apk"
 
     if [ ! -f "config.json" ]; then
-        echo "config.json does not exist for this app ($APPDIR), skipping..."
+        echo "config.json does not exist for this app, skipping..."
         cd ../..
-        mv "./build/${APPDIR%/}-placeholder.apk" "./build/${APPDIR%/}.apk"
-        echo "Finished building: $APPDIR"
+        echo "Finished building vulnerable app"
         echo
         return
     fi
 
     # Read config
-    PLACEHOLDER=$(jq -r '.placeholder' config.json)
-    FLAG=$(jq -r '.flag' config.json)
-    FILES=$(jq -r '.files[]' config.json)
+    PLACEHOLDER=$(awk -F'"' '/"placeholder"/{print $4}' config.json)
+    FLAG=$(awk -F'[ :"]+' '/"flag"/{print $3}' config.json)
+    FILES=$(awk -F'[][]' '/"files"/{gsub(/"|,/, "", $2); print $2}' config.json)
 
     echo -e "\n\n"
     # Flagged build
@@ -105,16 +104,36 @@ function local_build_app() {
       -Pandroid.injected.signing.key.password=$KEYSTORE_PASSWORD
     check_last_command
 
-    cp app/build/outputs/apk/release/app-release.apk "../../build/${APPDIR%/}-flag.apk"
+    cp app/build/outputs/apk/release/app-release.apk "../../build/bh-demo-flag.apk"
 
     echo "Restoring modified source files..."
     for file in $FILES; do
-      echo "Restoring file $file"
-      git restore $file
+      echo "Modifying file: $file"
+      sed -i "s/$FLAG/${PLACEHOLDER//\//\\/}/g" "$file"
     done
 
     cd ../..
-    echo "Finished building: $APPDIR"
+    echo "Finished building vulnerable app"
+    echo
+  fi
+}
+
+function local_build_exploit_app() {
+  if [[ -f "$APPSDIR/exploit-app/gradlew" ]]; then
+    echo "===================================="
+    echo "Building exploit app in: $APPSDIR"
+
+    cd "$APPSDIR/exploit-app"
+
+    # Placeholder build
+    echo "Building placeholder version..."
+    ./gradlew clean assembleRelease
+    check_last_command
+
+    cp app/build/outputs/apk/release/app-release.apk "../../build/exploit-app.apk"
+
+    cd ../..
+    echo "Finished building exploit app"
     echo
   fi
 }
@@ -148,7 +167,8 @@ function main() {
 
     # Local build
     if [[ "$COMMAND" == "local" ]]; then
-        local_build_app
+        local_build_vuln_app
+        local_build_exploit_app
     fi
 
     # Docker build
