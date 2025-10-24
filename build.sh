@@ -56,8 +56,6 @@ function setup_build_folder() {
 
 function local_build_vuln_app() {
   if [[ -f "$APPSDIR/vulnerable-app/gradlew" ]]; then
-    generate_keystore
-
     echo "===================================="
     echo "Building app in: $APPSDIR"
 
@@ -127,7 +125,11 @@ function local_build_exploit_app() {
 
     # Placeholder build
     echo "Building placeholder version..."
-    ./gradlew clean assembleRelease
+    ./gradlew clean assembleRelease \
+      -Pandroid.injected.signing.store.file=$KEYSTORE_ABS_PATH \
+      -Pandroid.injected.signing.store.password=$KEYSTORE_PASSWORD \
+      -Pandroid.injected.signing.key.alias=$KEY_ALIAS \
+      -Pandroid.injected.signing.key.password=$KEYSTORE_PASSWORD
     check_last_command
 
     cp app/build/outputs/apk/release/app-release.apk "../../build/exploit-app.apk"
@@ -167,6 +169,7 @@ function main() {
 
     # Local build
     if [[ "$COMMAND" == "local" ]]; then
+        generate_keystore
         local_build_vuln_app
         local_build_exploit_app
     fi

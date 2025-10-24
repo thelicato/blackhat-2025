@@ -1,6 +1,5 @@
 services:
   bh-demo-keygen:
-    image: bh-adbkeygen
     build:
       context: .
     container_name: android-bh-demo-keygen
@@ -48,5 +47,6 @@ services:
       - DROIDGROUND_START_RECEIVER_DISABLED=true
       - DROIDGROUND_START_SERVICE_DISABLED=true
       - DROIDGROUND_TERMINAL_DISABLED=true
+      - DROIDGROUND_EXPLOIT_APP_DURATION=20
     depends_on:
       - bh-demo-keygen
