@@ -2,7 +2,7 @@
 
 set -e
 
-APPSDIR="bh-state-machine"
+APPSDIR="apps"
 KEYSTORE_PATH="./keystore.jks"
 KEYSTORE_ABS_PATH=$(realpath $KEYSTORE_PATH)
 KEY_ALIAS="alias_$(tr -dc A-Za-z0-9 </dev/urandom | head -c 16; echo)"
