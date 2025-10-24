@@ -1,0 +1,52 @@
+services:
+  bh-demo-keygen:
+    image: bh-adbkeygen
+    build:
+      context: .
+    container_name: android-bh-demo-keygen
+    command: bash -c "rm -rf /keys/* && adb keygen /keys/adbkey && echo 'Keys generated' && tail -f /dev/null"
+    volumes:
+      - ./keys:/keys
+  bh-demo-android:
+    image: halimqarroum/docker-android:api-32-playstore
+    container_name: android-bh-demo-avd
+    devices:
+      - /dev/kvm
+    environment:
+      - DISABLE_ANIMATION=false
+      - DISABLE_HIDDEN_POLICY=true
+      - SKIP_AUTH=false
+    volumes:
+      - ./keys:/root/.android
+    depends_on:
+      - bh-demo-keygen
+  bh-demo-droidground:
+    image: ghcr.io/secforce/droidground:v0.2.8
+    container_name: android-bh-demo-droidground
+    restart: unless-stopped
+    ports:
+      - 4242:4242
+    volumes:
+      - ./init.d:/init.d
+      - ./keys:/root/.android
+    environment:
+      - DROIDGROUND_APP_PACKAGE_NAME=com.blackhat.multistep
+      - DROIDGROUND_ADB_HOST=localhost
+      - DROIDGROUND_ADB_PORT=5037
+      - DROIDGROUND_DEVICE_TYPE=network
+      - DROIDGROUND_DEVICE_HOST=android-bh-demo-avd
+      - DROIDGROUND_DEVICE_PORT=5555
+      - DROIDGROUND_INIT_SCRIPTS_FOLDER=/init.d
+      - DROIDGROUND_HOST=0.0.0.0
+      - DROIDGROUND_PORT=4242
+      - DROIDGROUND_SHUTDOWN_DISABLED=true
+      - DROIDGROUND_REBOOT_DISABLED=true
+      - DROIDGROUND_BUG_REPORT_DISABLED=true
+      - DROIDGROUND_APP_MANAGER_DISABLED=false
+      - DROIDGROUND_FRIDA_DISABLED=true
+      - DROIDGROUND_START_ACTIVITY_DISABLED=true
+      - DROIDGROUND_START_RECEIVER_DISABLED=true
+      - DROIDGROUND_START_SERVICE_DISABLED=true
+      - DROIDGROUND_TERMINAL_DISABLED=true
+    depends_on:
+      - bh-demo-keygen

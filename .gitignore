@@ -1,2 +1,4 @@
 keystore.jks
 build
+deploy/keys
+*.apk
