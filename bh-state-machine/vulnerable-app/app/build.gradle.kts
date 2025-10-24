@@ -23,16 +23,39 @@ android {
     }
 
     signingConfigs {
+        getByName("debug") {
+        }
+
         create("release") {
-            storeFile = file(project.findProperty("android.injected.signing.store.file") as String? ?: "")
-            storePassword = project.findProperty("android.injected.signing.store.password") as String? ?: ""
-            keyAlias = project.findProperty("android.injected.signing.key.alias") as String? ?: ""
-            keyPassword = project.findProperty("android.injected.signing.key.password") as String? ?: ""
+            // Only configure if all props are provided
+            val storeFileProp = project.findProperty("android.injected.signing.store.file") as String?
+            val storePasswordProp = project.findProperty("android.injected.signing.store.password") as String?
+            val keyAliasProp = project.findProperty("android.injected.signing.key.alias") as String?
+            val keyPasswordProp = project.findProperty("android.injected.signing.key.password") as String?
+
+            if (
+                storeFileProp != null &&
+                storePasswordProp != null &&
+                keyAliasProp != null &&
+                keyPasswordProp != null
+            ) {
+                storeFile = file(storeFileProp)
+                storePassword = storePasswordProp
+                keyAlias = keyAliasProp
+                keyPassword = keyPasswordProp
+            } else {
+                // Leave it untouched. Do NOT set bogus values.
+            }
         }
     }
 
     buildTypes {
-        release {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
+            isDebuggable = true
+        }
+
+        getByName("release") {
             signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(

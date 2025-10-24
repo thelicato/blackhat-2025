@@ -1,0 +1,5 @@
+{
+  "placeholder": "DROIDGROUND_FLAG_PLACEHOLDER",
+  "flag": "FLAG{Bl4ckh4t_1s_4w3s0m3!}",
+  "files": ["./app/src/main/java/com/blackhat/multistep/StateMachineActivity.kt"]
+}
