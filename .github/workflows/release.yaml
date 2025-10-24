@@ -1,0 +1,40 @@
+name: Build all sample apps and create release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Grant permission to gradlew
+        run: find . -name "gradlew" -exec chmod +x {} \;
+
+      - name: Grant permission to build.sh
+        run: chmod +x build.sh
+
+      - name: Build all apps (placeholder and flag versions)
+        run: |
+          ./build.sh local
+
+      - name: Upload all APKs to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
