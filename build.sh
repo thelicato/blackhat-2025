@@ -33,8 +33,8 @@ function help() {
 Usage: $(basename $0) <command>
 
 Command (required):
-  local                     Build the app locally.
-  docker                    Build the app through Docker.
+  local                     Build the apps locally.
+  docker                    Build the apps through Docker.
   help                      Show this help message and exit.
 "
 
